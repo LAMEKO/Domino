@@ -90,19 +90,22 @@ else:
     player = 'computer'
 finish = False
 while True:
-    draw = 0
-    for i in range(1, 7):
-        if domino_snake[0][0] == domino_snake[-1][-1] and len([y for x in domino_snake for y in x if y == i]) >= 8:
-            draw = 1
-    if draw == 1:
-        status = ("The game is over. It's a draw!")
-        finish = True
     if len(player_pieces) == 0:
         finish = True
         status = "The game is over. You won!"
     elif len(computer_pieces) == 0:
         finish = True
         status = "The game is over. The computer won!"
+    elif domino_snake[-1][-1] == domino_snake[0][0] and len(domino_snake) != 1:
+        count = 0
+        for x in [0, 1]:
+            for y in [-2, -1]:
+                if domino_snake[0][x] == domino_snake[-1][y]:
+                    for i in domino_snake:
+                        count += i.count(domino_snake[0][0])
+        if count >= 8:
+            status = "The game is over. It's a draw!"
+            finish = True
     print("======================================================================")
     print(f"Stock size: {len(stock_pieces)}\n")
     print(f"Computer pieces: {len(computer_pieces)}\n")
@@ -114,11 +117,9 @@ while True:
     for i in range(len(player_pieces)):  # printing player pieces
         print(f"{i + 1}:{player_pieces[i]}")
     print('\nStatus:', status)
-    if finish:
+    if finish == True:
         break
     if player == "player":  # player turn
-        player = 'computer'
-        status = "Computer is about to make a move. Press Enter to continue..."
         while True:
             try:
                 piece_number = int(input())
@@ -147,59 +148,36 @@ while True:
             except:
                 print("Invalid input. Please try again.")
                 continue
+        player = 'computer'
+        status = "Computer is about to make a move. Press Enter to continue..."
+        continue
     elif player == "computer":  # computer turn
+        input()
+        piece_number = random.randint(-len(computer_pieces), len(computer_pieces))
         while True:
-            player = "player"
-            status = "It's your turn to make a move. Enter your command."
-            input()
-            digit_score = dict()
-            for pieces in computer_pieces:
-                for j in pieces:
-                    for domino_pieces in domino_snake:
-                        if str(pieces) in digit_score:
-                            digit_score[j] += domino_pieces.count(j)
-                        else:
-                            digit_score[j] = domino_pieces.count(j)
-            # for key in ai_score:
-            #     print(key, "=", ai_score[key])
-            computer_pieces_score = []
-            for pieces in computer_pieces:
-                tmp = 0
-                for j in pieces:
-                    tmp += int(digit_score[j])
-                computer_pieces_score.append([pieces, tmp])
-            available_computer_pieces = []
-            for pieces in computer_pieces_score:
-                for x in [0, 1]:
-                    if (pieces[0][x] in domino_snake[0] or pieces[0][x] in domino_snake[-1]) and pieces not in available_computer_pieces:
-                        available_computer_pieces.append(pieces)
-            if len(available_computer_pieces) == 0:
-                try:
-                    computer_pieces.append(stock_pieces[0])
-                    stock_pieces.pop(0)
-                    break
-                except:
-                    break
-            max_ = available_computer_pieces[0][1]
-            elem = available_computer_pieces[0][0]
-            for pieces in available_computer_pieces:
-                # print(pieces)
-                if max_ < pieces[1]:
-                    max_ = pieces[1]
-                    elem = pieces[0]
-            piece_number = computer_pieces.index(elem)
-            if computer_rules_right(computer_pieces_=computer_pieces, piece_number_=piece_number):
-                domino_snake.append(computer_pieces[piece_number])
-                computer_pieces.pop(piece_number)
+            try:
+                if piece_number > 0:
+                    piece_number -= 1
+                    if not computer_rules_right(computer_pieces_=computer_pieces, piece_number_=piece_number):
+                        continue
+                    domino_snake.append(computer_pieces[piece_number])
+                    computer_pieces.pop(piece_number)
+                elif piece_number < 0:
+                    piece_number *= -1
+                    piece_number -= 1
+                    if not computer_rules_left(computer_pieces_=computer_pieces, piece_number_=piece_number):
+                        continue
+                    domino_snake.insert(0, computer_pieces[piece_number])
+                    computer_pieces.pop(piece_number)
+                elif piece_number == 0:
+                    try:
+                        computer_pieces.append(stock_pieces[0])
+                        stock_pieces.pop(0)
+                    except:
+                        break
                 break
-            elif computer_rules_left(computer_pieces_=computer_pieces, piece_number_=piece_number):
-                domino_snake.insert(0, computer_pieces[piece_number])
-                computer_pieces.pop(piece_number)
-                break
-            else:
-                try:
-                    computer_pieces.append(stock_pieces[0])
-                    stock_pieces.pop(0)
-                    break
-                except:
-                    break
+            except:
+                continue
+        player = "player"
+        status = "It's your turn to make a move. Enter your command."
+        continue
